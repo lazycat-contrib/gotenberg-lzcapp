@@ -1,0 +1,41 @@
+application:
+  title: Gotenberg
+  subtitle: 文档转换 API（Office/HTML 转 PDF、截图）
+  subdomain: gotenberg
+  multi_instance: false
+  upstreams:
+    - location: /
+      backend: http://gotenberg:3000/
+  ingress:
+    - protocol: tcp
+      port: 3000
+      service: gotenberg
+services:
+  gotenberg:
+    # upstream: gotenberg/gotenberg:9.0.0
+    image: docker.1ms.run/gotenberg/gotenberg:9.0.0
+    environment:
+      - TZ=Asia/Shanghai
+usage: |
+  Gotenberg 是一个无状态的文档转换 API：把 HTML、Markdown、
+  Office 文档（docx/xlsx/pptx 等）转成 PDF、图片，或互相转换，
+  内置 Chromium 与 LibreOffice，常与自动化流程/脚本搭配使用。
+
+  使用方法（无 Web 界面，纯 HTTP API）：
+  1. 打开应用入口，请求经平台入口鉴权后转发到本服务。
+  2. 例：把 docx 转 PDF（form-data）：
+     curl -X POST https://<你的应用地址>/forms/libreoffice/convert ' 
+       -F files=@文档.docx -o 文档.pdf
+  3. 例：网页截图：
+     curl -X POST https://<你的应用地址>/forms/chromium/screenshot/url ' 
+       -F url=https://example.com -o screenshot.png
+  4. 完整端点与参数见 https://gotenberg.dev/docs。
+
+  安全说明：
+  - Gotenberg 自身不带账号体系（官方无鉴权设计），因此不使用
+    public_path，统一由平台入口鉴权挡在前面；请勿把该地址透露给
+    平台外的其他人。
+  - 服务无状态：转换在内存/临时目录完成，自动清理，无外部数据库。
+
+  说明：
+  - 未做实机验证：文档转换、截图、并发与超时行为均未在设备上实测。
